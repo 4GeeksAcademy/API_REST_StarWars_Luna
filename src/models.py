@@ -26,6 +26,14 @@ class User(db.Model):
     
     def __str__(self):
         return f'User {self.user}'
+    def serialize(self):
+        return{
+            'id': self.id,
+            'user': self.user,
+            'email': self.email,
+            'subscription_date': self.subscription_date,
+            'is_active': self.is_active
+        }
 
 
 class Planet(db.Model):
