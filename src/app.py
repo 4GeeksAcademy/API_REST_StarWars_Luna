@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User
+from models import db, User, Character, Planet
 import datetime
 # from models import Person
 
@@ -59,52 +59,124 @@ def get_users():
     users_serialized = []
     for user in users:
         users_serialized.append(user.serialize())
-    return jsonify({'msg':'ok', 'results':users_serialized}), 200
+    return jsonify({'msg': 'ok', 'results': users_serialized}), 200
+
 
 @app.route('/user/<int:id>', methods=['GET'])
 def get_user_by_id(id):
-    user=User.query.get(id)
+    user = User.query.get(id)
     if user is None:
         return jsonify({'msg': 'Usuario no encontrado'}), 404
-    return jsonify({'msg':'ok', 'result': user.serialize()}), 200
+    return jsonify({'msg': 'ok', 'result': user.serialize()}), 200
+
+
+@app.route('/characters', methods=['GET'])
+def get_characters():
+    characters = Character.query.all()
+    characters_serialized = []
+    for character in characters:
+        characters_serialized.append(character.serialize())
+    return jsonify({'msg': 'ok', 'results': characters_serialized}), 200
+
+
+@app.route('/character/<int:id>', methods=['GET'])
+def get_character_by_id(id):
+    character = Character.query.get(id)
+    if character is None:
+        return jsonify({'msg': 'Personaje no encontrado'}), 404
+    return jsonify({'msg': 'ok', 'result': character.serialize()}), 200
+
+
+@app.route('/planets', methods=['GET'])
+def get_planets():
+    planets = Planet.query.all()
+    planets_serialized = []
+    for planet in planets:
+        planets_serialized.append(planet.serialize())
+    return jsonify({'msg': 'ok', 'results': planets_serialized}), 200
+
+
+@app.route('/planet/<int:id>', methods=['GET'])
+def get_planet_by_id(id):
+    planet = Planet.query.get(id)
+    if planet is None:
+        return jsonify({'msg': 'Planeta no encontrado'}), 404
+    return jsonify({'msg': 'ok', 'result': planet.serialize()}), 200
+
+
+@app.route('/user/<int:user_id>/favorites', methods=['GET'])
+def get_user_favorites(user_id):
+    user = User.query.get(user_id)
+    if user is None:
+        return jsonify({'msg': f'el usuario con id {user_id} no existe'}), 404
+    favorites_characters_serialized = []
+    for fav in user.fav_character:
+        favorites_characters_serialized.append(fav.character_inf.serialize())
+
+    favorites_planets_serialized = []
+    for fav in user.fav_planet:
+        favorites_planets_serialized.append(fav.planet_inf.serialize())
+
+    return jsonify({'msg': 'ok', 'favorite_characters': favorites_characters_serialized, 'favorite_planets': favorites_planets_serialized}), 200
+
 
 @app.route('/user', methods=['POST'])
 def create_user():
-    body= request.get_json(silent=True)
+    body = request.get_json(silent=True)
     if body is None:
-        return jsonify({'msg':'Debes enviar información en el body'}), 400
+        return jsonify({'msg': 'Debes enviar información en el body'}), 400
     if 'user' not in body:
-        return jsonify({'msg':'Debes crear un user'}), 400
-    if body['user'].strip()=='':
-         return jsonify({'msg': 'Debes enviar un user válido'}), 400
+        return jsonify({'msg': 'Debes crear un user'}), 400
+    if body['user'].strip() == '':
+        return jsonify({'msg': 'Debes enviar un user válido'}), 400
     if 'first_name' not in body:
-        return jsonify({'msg':'Debes enviar un campo first_name'}), 400
+        return jsonify({'msg': 'Debes enviar un campo first_name'}), 400
     if body['first_name'].strip() == '':
         return jsonify({'msg': 'Debes enviar un nombre válido'}), 400
     if 'last_name' not in body:
-        return jsonify({'msg':'Debes enviar un campo last_name'}), 400
+        return jsonify({'msg': 'Debes enviar un campo last_name'}), 400
     if body['last_name'].strip() == '':
         return jsonify({'msg': 'Debes enviar un apellido válido'}), 400
     if 'email' not in body:
-        return jsonify({'msg':'Debes enviar un campo email'}), 400
+        return jsonify({'msg': 'Debes enviar un campo email'}), 400
     if body['email'].strip() == '':
         return jsonify({'msg': 'Debes enviar un email válido'}), 400
     if 'password' not in body:
-        return jsonify({'msg':'Debes enviar un campo password'}), 400
+        return jsonify({'msg': 'Debes enviar un campo password'}), 400
     if body['password'].strip() == '':
         return jsonify({'msg': 'Debes enviar una contraseña válida'}), 400
-    
-    new_user=User()
-    new_user.user=body['user']
-    new_user.first_name=body['first_name']
-    new_user.last_name=body['last_name']
-    new_user.email=body['email']
-    new_user.password=body['password']
-    new_user.subscription_date=datetime.datetime.now().strftime('%Y-%m-%d')
-    new_user.is_active=True
+
+    new_user = User()
+    new_user.user = body['user']
+    new_user.first_name = body['first_name']
+    new_user.last_name = body['last_name']
+    new_user.email = body['email']
+    new_user.password = body['password']
+    new_user.subscription_date = datetime.datetime.now().strftime('%Y-%m-%d')
+    new_user.is_active = True
     db.session.add(new_user)
     db.session.commit()
-    return jsonify({'msg':'ok', 'result': new_user.serialize()}), 201
+    return jsonify({'msg': 'ok', 'result': new_user.serialize()}), 201
+
+
+@app.route('/user/<int:id>', methods=['PUT'])
+def update_user(id):
+    body = request.get_json(silent=True)
+    user = User.query.get(id)
+    if user is None:
+        return jsonify({'msg': 'Usuario no encontrado'}), 404
+    if body is None:
+        return jsonify({'msg': 'No se ha hecho ningún cambio'}), 400
+
+    if 'user' in body:
+        user.user = body['user']
+    if 'email' in body:
+        user.email = body['email']
+    if 'first_name' in body:
+        user.first_name = body['first_name']
+    db.session.commit()
+    return jsonify({'msg': 'ok', 'result': user.serialize()}), 200
+
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':

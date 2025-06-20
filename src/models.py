@@ -49,6 +49,13 @@ class Planet(db.Model):
 
     def __str__(self):
         return f'Planet {self.name}'
+    
+    def serialize(self):
+        return{
+            'id': self.id,
+            'name': self.name,
+            'weather': self.weather
+        }
 
 
 class Character(db.Model):
@@ -65,6 +72,13 @@ class Character(db.Model):
     def __str__(self):
         return f'{self.name}'
     
+    def serialize(self):
+        return{
+            'id':self.id,
+            'name':self.name,
+            'species':self.species
+        }
+    
 class Favorite_Planet(db.Model):
     __tablename__ = 'favorite_planet'
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -74,6 +88,9 @@ class Favorite_Planet(db.Model):
         back_populates='fav_planet')
     planet_inf: Mapped[Planet]=relationship(
         back_populates='favorite')
+    
+    def __str__(self):
+        return f'{self.favorite_planet_by} likes {self.planet_inf}'
 
 class Favorite_Character(db.Model):
     __tablename__ = 'favorite_character'
@@ -84,3 +101,6 @@ class Favorite_Character(db.Model):
         back_populates='fav_character')
     character_inf: Mapped[Character]=relationship(
         back_populates='favorites')
+    
+    def __str__(self):
+        return f'{self.favorite_character_by} likes {self.character_inf}'
