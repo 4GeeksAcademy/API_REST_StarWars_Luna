@@ -91,6 +91,15 @@ class Favorite_Planet(db.Model):
     
     def __str__(self):
         return f'{self.favorite_planet_by} likes {self.planet_inf}'
+    
+    def serialize(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'user': self.favorite_planet_by.user if self.favorite_planet_by else None,
+            'planet_id': self.planet_id,
+            'planet': self.planet_inf.name if self.planet_inf else None
+        }
 
 class Favorite_Character(db.Model):
     __tablename__ = 'favorite_character'
@@ -104,3 +113,12 @@ class Favorite_Character(db.Model):
     
     def __str__(self):
         return f'{self.favorite_character_by} likes {self.character_inf}'
+    
+    def serialize(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'user': self.favorite_character_by.user if self.favorite_character_by else None,
+            'character_id': self.character_id,
+            'character': self.character_inf.name if self.character_inf else None
+        }
